@@ -60,6 +60,7 @@ export function ActivitiesManagement() {
   const [answerText, setAnswerText] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [students, setStudents] = useState<string[]>([]);
 
   // Grading state
   const [gradingSubmission, setGradingSubmission] = useState<any>(null);
@@ -105,6 +106,18 @@ export function ActivitiesManagement() {
       unsubscribeSubmissions();
     };
   }, [isTeacher, user?.uid, gradingSubmission?.id]);
+
+  useEffect(() => {
+    if (!isTeacher) return;
+    const usersRef = collection(db, 'users');
+    const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+      const list = snapshot.docs.map(doc => doc.id);
+      setStudents(list);
+    }, (error) => {
+      console.error("Error fetching users:", error);
+    });
+    return () => unsubscribeUsers();
+  }, [isTeacher]);
 
   const handleSubmitActivity = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,6 +305,10 @@ export function ActivitiesManagement() {
 
                 for (const sub of sortedSubmissions) {
                   if (sub.studentId && !seenStudents.has(sub.studentId)) {
+                    // Filter out dummy/deleted students
+                    if (isTeacher && students.length > 0 && !students.includes(sub.studentId)) {
+                      continue;
+                    }
                     seenStudents.add(sub.studentId);
                     uniqueSubmissions.push(sub);
                   }
