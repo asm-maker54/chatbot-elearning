@@ -137,9 +137,16 @@ async function startServer() {
 
   const upload = multer({ storage: multer.memoryStorage() });
 
-  // Firebase init (client SDK)
-  const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
-  const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+  // Firebase init (client SDK) - reads from env var in production, file in dev
+  let firebaseConfig: any;
+  if (process.env.FIREBASE_CLIENT_CONFIG) {
+    firebaseConfig = JSON.parse(process.env.FIREBASE_CLIENT_CONFIG);
+    console.log("[Firebase] Initialized from env var");
+  } else {
+    const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+    firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+    console.log("[Firebase] Initialized from local file");
+  }
   initializeApp(firebaseConfig);
 
   // Firebase Admin init - supports both env var (production) and local file (dev)
