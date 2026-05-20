@@ -1,20 +1,22 @@
 FROM node:20-alpine
+
 WORKDIR /app
 
-# Copy package.json
+# Copy package.json only (no package-lock.json)
 COPY package.json ./
+COPY .npmrc ./
 
-# Install dependencies with legacy peer deps to avoid conflicts
+# Install all dependencies including devDependencies needed for build
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the application
+# Copy rest of the source code
 COPY . .
 
-# Build the frontend
+# Build the frontend with Vite
 RUN npm run build
 
-# Expose the port your Express server runs on
+# Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start Express server
+CMD ["node", "--import", "tsx/esm", "server.ts"]
